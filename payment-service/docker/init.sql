@@ -4,8 +4,8 @@ USE test;
 
 -- 1) Payment Event -----------------------------------------------------------
 CREATE TABLE payment_events (
-    id               BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,           -- PK
-    buyer_id         BIGINT UNSIGNED                NOT NULL,              -- FK to buyer table (별도 테이블이 있다면)
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,           -- PK
+    buyer_id         BIGINT                NOT NULL,              -- FK to buyer table (별도 테이블이 있다면)
     is_payment_done  BOOLEAN                        NOT NULL DEFAULT FALSE,
     payment_key      VARCHAR(255)                   UNIQUE,                -- PSP 고유 키
     order_id         VARCHAR(255)                   UNIQUE,                -- 서비스 내부 주문 ID
@@ -24,18 +24,18 @@ CREATE TABLE payment_events (
 
 -- 2) Payment Order -----------------------------------------------------------
 CREATE TABLE payment_orders (
-    id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,       -- PK
-    payment_event_id     BIGINT UNSIGNED                NOT NULL,          -- FK → payment_event.id
-    seller_id            BIGINT UNSIGNED                NOT NULL,
-    product_id           BIGINT UNSIGNED                NOT NULL,
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,       -- PK
+    payment_event_id     BIGINT                NOT NULL,          -- FK → payment_event.id
+    seller_id            BIGINT                NOT NULL,
+    product_id           BIGINT                NOT NULL,
     order_id             VARCHAR(255)                   NOT NULL,          -- 조회 시 Join을 피하기 위한 컬럼 (order_id는 변경이 없기 때문에 동기화 필요 x)
     amount               DECIMAL(15,2)                  NOT NULL,          -- 필요시 Scale 조정
     payment_order_status ENUM('NOT_STARTED','EXECUTING','SUCCESS','FAILURE', 'UNKNOWN')
                                                     NOT NULL DEFAULT 'NOT_STARTED',
     ledger_updated       BOOLEAN                        NOT NULL DEFAULT FALSE,
     wallet_updated       BOOLEAN                        NOT NULL DEFAULT FALSE,
-    failed_count         TINYINT UNSIGNED               NOT NULL DEFAULT 0,
-    threshold            TINYINT UNSIGNED               NOT NULL DEFAULT 5,
+    failed_count         TINYINT               NOT NULL DEFAULT 0,
+    threshold            TINYINT               NOT NULL DEFAULT 5,
     created_at           DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP
                                                              ON UPDATE CURRENT_TIMESTAMP,
@@ -49,8 +49,8 @@ CREATE TABLE payment_orders (
 
 -- 3) Payment Order History ----------------------------------------------------
 CREATE TABLE payment_order_histories (
-    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,            -- PK
-    payment_order_id BIGINT UNSIGNED                NOT NULL,              -- FK → payment_order.id
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,            -- PK
+    payment_order_id BIGINT                NOT NULL,              -- FK → payment_order.id
     previous_status ENUM('NOT_STARTED','EXECUTING','SUCCESS','FAILURE','UNKNOWN') NOT NULL,
     new_status      ENUM('NOT_STARTED','EXECUTING','SUCCESS','FAILURE','UNKNOWN') NOT NULL,
     created_at      DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
