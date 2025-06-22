@@ -48,7 +48,7 @@ class CheckoutServiceTest (
     val paymentEvent = paymentDatabaseHelper.getPayments(orderId)!!
 
     assertThat(paymentEvent.orderId).isEqualTo(orderId)
-    println(paymentEvent.totalAmount())
+
     assertThat(paymentEvent.totalAmount().toInt()).isEqualTo(30000)
     assertThat(paymentEvent.paymentOrders.size).isEqualTo(checkoutCommand.productIds.size)
     assertFalse(paymentEvent.isPaymentDone())

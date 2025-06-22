@@ -1,7 +1,5 @@
 package com.example.paymentservice.adapter.`in`.web.response
 
-import org.springframework.http.HttpStatus
-
 data class ApiResponse<T> (
     val status: String = "success",
     val message: String = "",

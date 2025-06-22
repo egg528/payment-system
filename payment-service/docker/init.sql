@@ -12,7 +12,7 @@ CREATE TABLE payment_events (
     type             ENUM('NORMAL')                 NOT NULL,              -- 결제 유형(추가 가능)
     order_name       VARCHAR(255)                   NOT NULL,
     method           ENUM('EASY_PAY')               NOT NULL,              -- 결제 수단(추가 가능)
-    psp_raw_data     JSON                           NULL,                  -- PSP 원본 응답
+    psp_raw_data     VARCHAR(2000)                       NULL,                  -- PSP 원본 응답
     created_at       DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP
                                                              ON UPDATE CURRENT_TIMESTAMP,
@@ -54,10 +54,10 @@ CREATE TABLE payment_order_histories (
     previous_status ENUM('NOT_STARTED','EXECUTING','SUCCESS','FAILURE','UNKNOWN') NOT NULL,
     new_status      ENUM('NOT_STARTED','EXECUTING','SUCCESS','FAILURE','UNKNOWN') NOT NULL,
     created_at      DATETIME                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    changed_by      VARCHAR(255)                   NOT NULL,
+    changed_by      VARCHAR(255)                   NOT NULL DEFAULT 'payment-system',
     reason          VARCHAR(255)                   NULL,
 
     INDEX idx_payment_order_id (payment_order_id),
     INDEX idx_created_at (created_at),
     FOREIGN KEY (payment_order_id) REFERENCES payment_orders(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
