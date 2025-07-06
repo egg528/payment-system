@@ -1,11 +1,18 @@
 package com.example.paymentservice.adapter.out.persistent.repository
 
+import com.example.paymentservice.adapter.out.persistent.util.MySQLDateTimeFormatter
 import com.example.paymentservice.domain.PaymentEvent
+import com.example.paymentservice.domain.PaymentStatus
+import com.example.paymentservice.domain.PendingPaymentEvent
+import com.example.paymentservice.domain.PendingPaymentOrder
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.reactive.TransactionalOperator
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.LocalDateTime
 
 @Repository
 class R2DBCPaymentRepository (
@@ -18,6 +25,34 @@ class R2DBCPaymentRepository (
             .flatMap { paymentEventId -> insertPaymentOrders(paymentEvent, paymentEventId) }
             .`as`(transactionalOperator::transactional)
             .then()
+    }
+
+    override fun getPendingPayments(): Flux<PendingPaymentEvent> {
+        return databaseClient.sql(SELECT_PENDING_PAYMENTS_QUERY)
+            .bind("updatedAt", LocalDateTime.now().format(MySQLDateTimeFormatter))
+            .fetch()
+            .all()
+            .groupBy { it["payment_event_id"] as Long }
+            .flatMap { groupedFlux ->
+                groupedFlux.collectList().map { results ->
+                    PendingPaymentEvent(
+                        paymentEventId = groupedFlux.key(),
+                        paymentKey = results.first()["payment_key"] as String,
+                        orderId = results.first()["order_id"] as String,
+                        pendingPaymentOrders = results.map {
+                            PendingPaymentOrder(
+                                pendingOrderId = it["payment_order_id"] as Long,
+                                status = PaymentStatus.get(it["payment_order_status"] as String),
+                                amount = (it["amount"] as BigDecimal).toLong(),
+                                failedCount = it["failed_count"] as Byte,
+                                threshold = it["threshold"] as Byte
+                            )
+
+                        }
+                    )
+
+                }
+            }
     }
 
     private fun insertPaymentEvent(paymentEvent: PaymentEvent): Mono<Long> {
@@ -61,5 +96,23 @@ class R2DBCPaymentRepository (
       INSERT INTO payment_orders (payment_event_id, seller_id, order_id, product_id, amount, payment_order_status) 
       VALUES $valueClauses
     """.trimIndent()
+
+        val SELECT_PENDING_PAYMENTS_QUERY = """
+        SELECT
+            pe.id AS payment_event_id, 
+            pe.payment_key, 
+            pe.order_id, 
+            po.id as payment_order_id, 
+            po.payment_order_status, 
+            po.amount, 
+            po.failed_count, 
+            po.threshold 
+        FROM payment_events pe
+        INNER JOIN payment_orders po ON po.payment_event_id = pe.id
+        WHERE (po.payment_order_status = 'UNKNOWN' OR (po.payment_order_status = 'EXECUTING' AND po.updated_at <= :updatedAt - INTERVAL 3 MINUTE)) 
+            AND po.failed_count < po.threshold
+        LIMIT 10
+    """.trimIndent()
+
     }
 }
