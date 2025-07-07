@@ -7,9 +7,36 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   thymeleaf:
     cache: false
+  cloud:
+    function:
+      scan:
+        enabled: false
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: true
+          configuration:
+            enable.auto.commit: false
+            auto.offset.reset: earliest
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            value.serializer: org.apache.kafka.common.serialization.StringSerializer
+            key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          required-acks: all
+      bindings:
+        consume-in-0:
+          destination: payment
+          group: payment-service
 
 PSP:
   toss:
     secretKey: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
     clientKey: test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm
     url: https://api.tosspayments.com
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: bindings
