@@ -61,3 +61,17 @@ CREATE TABLE payment_order_histories (
     INDEX idx_created_at (created_at),
     FOREIGN KEY (payment_order_id) REFERENCES payment_orders(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 4) outbox ----------------------------------------------------
+CREATE TABLE outboxes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    idempotency_key VARCHAR(255) UNIQUE NOT NULL,
+    status ENUM ('INIT', 'FAILURE', 'SUCCESS') DEFAULT 'INIT',
+    type VARCHAR(40),
+    partition_key INT DEFAULT 0,
+    payload JSON,
+    metadata JSON,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
