@@ -37,3 +37,42 @@
   - 현재 구현처럼 API 서버에 Scheduler로 결제 복구 시스템을 두면 Scale을 늘리면 중복 처리의 가능성이 발생한다.
   - 가장 간단히는 Lock을 활용해 동시에 수행이 안 된도록 할 수 있다.
   - 단, Scale을 늘려 처리량을 높이고 싶다면 `Partitioning`을 통해 각 POD가 접근할 데이터를 분리해야 한다.
+
+### 4. 결제 승인 완료 Event 발행
+```mermaid
+sequenceDiagram
+      participant Client
+      participant API as PaymentController
+      participant UC as PaymentConfirmUseCase
+      participant PA as PaymentPersistentAdapter
+      participant DB as MySQL Database
+      participant PUB as PaymentEventMessagePublisher
+      participant SENDER as PaymentEventMessageSender
+      participant KAFKA as Kafka
+      participant EXT as External Services
+
+      Client->>API: POST /confirm
+      API->>UC: confirmPayment()
+
+      Note over UC,DB: Transaction Start
+      UC->>PA: updatePaymentStatus()
+      PA->>DB: UPDATE payment_orders
+      PA->>DB: INSERT payment_history
+      PA->>DB: INSERT outbox (INIT)
+      UC->>PUB: publishEvent()
+      Note over UC,DB: Transaction Commit
+
+      PUB->>SENDER: @TransactionalEventListener
+      SENDER->>KAFKA: send message
+
+      KAFKA-->>SENDER: delivery result
+      SENDER->>DB: UPDATE outbox (SUCCESS/FAILURE)
+
+      KAFKA->>EXT: consume events
+
+      Note over SENDER: Recovery Process
+      loop Every 1 second
+          SENDER->>DB: SELECT INIT or FAILURE outbox
+          SENDER->>KAFKA: retry failed messages
+      end
+```

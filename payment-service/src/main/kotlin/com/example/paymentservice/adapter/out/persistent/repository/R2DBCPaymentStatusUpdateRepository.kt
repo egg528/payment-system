@@ -2,6 +2,7 @@ package com.example.paymentservice.adapter.out.persistent.repository
 
 import com.example.paymentservice.adapter.out.persistent.exception.PaymentAlreadyProcessedException
 import com.example.paymentservice.application.port.out.PaymentStatusUpdateCommand
+import com.example.paymentservice.domain.PaymentEventMessagePublisher
 import com.example.paymentservice.domain.PaymentStatus
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
@@ -13,6 +14,8 @@ import reactor.core.publisher.Mono
 class R2DBCPaymentStatusUpdateRepository (
   private val databaseClient: DatabaseClient,
   private val transactionalOperator: TransactionalOperator,
+  private val paymentOutboxRepository: PaymentOutboxRepository,
+  private val paymentEventMessagePublisher: PaymentEventMessagePublisher
 ) : PaymentStatusUpdateRepository {
 
   override fun updatePaymentStatusToExecuting(orderId: String, paymentKey: String): Mono<Boolean> {
@@ -96,6 +99,8 @@ class R2DBCPaymentStatusUpdateRepository (
       .flatMap { insertPaymentHistory(it, command.status, "PAYMENT_CONFIRMATION_DONE") }
       .flatMap { updatePaymentOrderStatus(command.orderId, command.status) }
       .flatMap { updatePaymentEventExtraDetails(command) }
+      .flatMap { paymentOutboxRepository.insertOutbox(command) }
+      .flatMap { paymentEventMessagePublisher.publishEvent(it) }
       .`as`(transactionalOperator::transactional)
       .thenReturn(true)
   }

@@ -24,6 +24,13 @@ spring:
             key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
             value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
           required-acks: all
+
+        bindings:
+          send-out-0:
+            producer:
+              :
+              record-metadata-channel: payment-result
+
       bindings:
         consume-in-0:
           destination: payment

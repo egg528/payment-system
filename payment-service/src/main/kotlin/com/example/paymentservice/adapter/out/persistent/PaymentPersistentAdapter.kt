@@ -3,12 +3,14 @@ package com.example.paymentservice.adapter.out.persistent
 import com.example.paymentservice.adapter.out.persistent.repository.PaymentRepository
 import com.example.paymentservice.adapter.out.persistent.repository.PaymentStatusUpdateRepository
 import com.example.paymentservice.adapter.out.persistent.repository.PaymentValidationRepository
+import com.example.paymentservice.application.port.out.LoadPendingPaymentEventMessagePort
 import com.example.paymentservice.application.port.out.LoadPendingPaymentPort
 import com.example.paymentservice.application.port.out.PaymentStatusUpdateCommand
 import com.example.paymentservice.application.port.out.PaymentStatusUpdatePort
 import com.example.paymentservice.application.port.out.PaymentValidationPort
 import com.example.paymentservice.application.port.out.SavePaymentPort
 import com.example.paymentservice.domain.PaymentEvent
+import com.example.paymentservice.domain.PaymentEventMessage
 import com.example.paymentservice.domain.PendingPaymentEvent
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
@@ -19,7 +21,7 @@ class PaymentPersistentAdapter (
     private val paymentRepository: PaymentRepository,
     private val paymentStatusUpdateRepository: PaymentStatusUpdateRepository,
     private val paymentValidationRepository: PaymentValidationRepository,
-) : SavePaymentPort, PaymentStatusUpdatePort, PaymentValidationPort, LoadPendingPaymentPort {
+) : SavePaymentPort, PaymentStatusUpdatePort, PaymentValidationPort, LoadPendingPaymentPort, LoadPendingPaymentEventMessagePort {
     override fun save(paymentEvent: PaymentEvent): Mono<Void> {
         return paymentRepository.save(paymentEvent)
     }
@@ -37,6 +39,10 @@ class PaymentPersistentAdapter (
     }
 
     override fun getPendingPayments(): Flux<PendingPaymentEvent> {
+        TODO("Not yet implemented")
+    }
+
+    override fun LoadPendingPaymentEventMessage(): Flux<PaymentEventMessage> {
         TODO("Not yet implemented")
     }
 }
