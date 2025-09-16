@@ -32,6 +32,10 @@ spring:
                 transaction:
                   timeout:
                     ms: 30000
+      bindings:
+        consume-in-0:
+          destination: payment
+          group: wallet-service
 
 logging:
   level:
