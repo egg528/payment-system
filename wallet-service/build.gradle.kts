@@ -25,6 +25,8 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-stream-binder-kafka")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.retry:spring-retry")
+    implementation("org.springframework:spring-aspects")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     runtimeOnly("com.mysql:mysql-connector-j")
     runtimeOnly("com.h2database:h2")
